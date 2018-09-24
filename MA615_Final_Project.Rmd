@@ -1,0 +1,278 @@
+---
+title: "MA615 Final Project Report"
+author: "Xiang Zhao"
+date: "12/18/2017"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F)
+library(tidyverse)
+library(streamR)
+library(stringr)
+library(wordcloud)
+library(tm)
+library(dplyr)
+library(leaflet)
+library(lubridate)
+library(wordcloud)
+library(ggplot2)
+library(maps)
+library(plotly)
+library(knitr)
+library(devtools)
+```
+
+# Introduction
+
+###2017 Cyberthreats Defense Report have done a survey and data analysis on successful cyberattacks a company or an organization experienced in 15 countries. It shows that 80.6% respondents in America have compromised by at least one successful cyberattack in the past 12 months. The beast situation happened in Brazil and the worst situation happpened in China, 64.7% and 95.9%.
+
+###It's not hard to see the severity of cyberattack and importance of cybersecurity. Thus, I choose cybersecurity and cyberattack(cybercrime) as my topics to see the reactions and comments people have on social media Twitter. I used text analysis and mapping to see where and what kind of reactions and comments peopel have gloabally. And also I selected first two best protection softwares against cyberattacks, using sentiment analysis to see people's attitude towards these two softwares.
+
+
+# Data & Method 
+## Data
+###I collected data from Twitter using 'searchTwitter' in R through online api and access token. I searched 5 key words in total, cybersecurity, cybercrime, cyberattack, bitdefender and kaspersky. For "cybersecurity", there is 10000 rows and has text of twittes, created time, retwitted count, longitude and latitude and so on, only 9 of then have geolocation. The rest four datasets have same data format with different sample size. 
+
+##Method 
+###I used twitteR::searchTwitter to search for data, ggplot2::ggplot/ggplotly to draw map and other plots, wordcloud::wordcloud to do text analysis and draw word cloud and using sentiment analysis to analyze people' attitude toward protection softwares against cyberattack. And I use shiny app to show a interactive app of the result of my analysis.
+
+\newpage
+# Cybersecurit
+
+###Cybersecurity is the body of technologies, processes and practices designed to protect networks, computers, programs and data from attack, damage or unauthorized access. Cybersecurity is a hot topic especially at the data booming stage right now. 
+
+## Word Cloud
+
+###When talking about cybersecurity, we really want to see what are people's main reactions and comments on social media twitter? The word cloud below gives us answer.
+
+
+```{r,message=FALSE,warning=FALSE}
+cybersecurity.df <- readRDS("cybersecurity.df.rds")
+cyberword <- Corpus(VectorSource(str_replace_all(cybersecurity.df$text, "@", "")))
+cyberword <- tm_map(cyberword, removePunctuation)
+cyberword <- tm_map(cyberword, content_transformer(tolower))
+cyberword <- tm_map(cyberword, removeWords, stopwords("english"))
+cyberword <- tm_map(cyberword, removeWords, c("cybersecurity","cyber","security","levelnet","amp","visit","part"))
+cyberword <- tm_map(cyberword, stripWhitespace)
+
+pal <- brewer.pal(9,"Blues")
+pal <- pal[-(1:4)]
+set.seed(123)
+wordcloud(words = cyberword, scale=c(2.5,0.2), max.words=300, random.order=FALSE, 
+          rot.per=0.35, use.r.layout=FALSE, colors=brewer.pal(9,"Blues")[5:9])
+```
+
+###In this word cloud, we can see several most frequent words like "entrepreneurial", "timmaliyil" and "blockchain" which are related to cybersecurity. They may reflect that cybersecurity is realy important for corporations and entrepreneurs because it's highly related to the network of companies or organizations, which may have an effect on trade secret which equals to profit. Tim Maliyil is a managed security services entrepreneur who Helps customers worldwide secure their data with encryption solutions. A blockchain, originally block chain, a continuously growing list of records, called blocks, which are linked and secured using cryptography is also a word relates to cybersecurity. Also, blockchain is highly correlated with bitcoin and fintech which have urgent needs of cybersecurity.
+
+\newpage
+## Timeline
+
+###Also I'm interested in the count of favorites for the key word "cybersecurity", in order to see the number of favorites, I created a timeline to see when and the  trend of number of favorites
+
+```{r,message=FALSE,warning=FALSE}
+#Timeline
+cybersecurity.df$favoriteCount <- as.numeric(cybersecurity.df$favoriteCount)
+cybersecurity.df$time <- lubridate::as_datetime(cybersecurity.df$created)
+t1 <- ggplot(cybersecurity.df, aes(x = time))
+t1 <- t1 + geom_line(aes(y = favoriteCount),color = "navy")
+t1 <- t1 + labs(x="Time", y="Number of Favorites")
+t1
+```
+
+###This timeline is actually a 8-hour timeline which shows the count of favorites about cybersecurity, and the least unit of time is 1 second. The highest number of favorites is about more than 250 at around 18:00 December 13rd, 2017.
+
+\newpage
+## Map
+
+###Moreover, the geolocated distribution of tweets is also another interesting thing to explore since it reflects where has the biggest reaction to the topic.
+
+```{r,message=FALSE,warning=FALSE}
+#Mapping
+cybersecurity.geo <- readRDS("cybersecurity.geo.rds")
+cybersecurity.geo$longitude <- as.numeric(cybersecurity.geo$longitude)
+cybersecurity.geo$latitude <- as.numeric(cybersecurity.geo$latitude)
+map <- NULL
+mapWorld <- borders(database = "world", colour="gray45", fill="light green") # create a layer of borders
+map <- ggplot() +   mapWorld
+map <- map+ geom_point(aes(longitude,latitude), data = cybersecurity.geo, color="dark red", size=2.5) 
+map <- map + theme_bw()
+map
+```
+
+###Through the map of geolocations of tweets on cybersecurity, we can see that almost all the spatial points drop in the USA,unifomally distributed from west to middle to east America. While there is one point dropping on India. Since there is only 9 geolocations, so it's too less to draw any conclusion through map.
+
+\newpage
+# Cyberthreat
+
+###The original definition of cyberthreat is the possibility of a malicious attempt to damage or disrupt a computer network or system, which is a bad thing for cybersecurity or the thing is fighted against. I searched "cyberattack" and "cybercrime" to see people's reactions toward these two negative word.
+
+## Word Cloud of Cybercrime
+
+```{r,message=FALSE,warning=FALSE}
+cybercrime.df <- readRDS("cybercrime.df.rds")
+crimeword <- Corpus(VectorSource(str_replace_all(cybercrime.df$text, "@", "")))
+crimeword <- tm_map(crimeword, removePunctuation)
+crimeword <- tm_map(crimeword, content_transformer(tolower))
+crimeword <- tm_map(crimeword, removeWords, stopwords("english"))
+crimeword <- tm_map(crimeword, removeWords, c("cybercrime","cyber","crime","cybersecurity","security","amp"))
+crimeword <- tm_map(crimeword, stripWhitespace)
+
+pal <- brewer.pal(9,"Reds")
+pal <- pal[-(1:4)]
+set.seed(168)
+wordcloud(words = crimeword, scale=c(2.5,0.2), max.words=300, random.order=FALSE, 
+          rot.per=0.35, use.r.layout=T, colors=brewer.pal(9,"Reds")[5:9])
+```
+
+###The word cloud of cybercrime shows several frequent words, "infosec", "bitcoin", "banking","hacking","frauds","big data" and "machine learning". We can see that cybercrime relates more to business and finance like banking system, bitcoin and may seek for information security because of the occurence of potential problem like frauding, and also big data and machine learning maybe signals for further developments or solutions for cybercrimes.
+
+\newpage
+## Word Cloud of Cyberattack
+
+```{r,message=FALSE,warning=FALSE}
+cyberattack.df <- readRDS("cyberattack.df.rds")
+attackword <- Corpus(VectorSource(str_replace_all(cyberattack.df$text, "@", "")))
+attackword <- tm_map(attackword, removePunctuation)
+attackword <- tm_map(attackword, content_transformer(tolower))
+attackword <- tm_map(attackword, removeWords, stopwords("english"))
+attackword <- tm_map(attackword, removeWords, c("cyber","cyberattack","attack","cybersecurity"))
+attackword <- tm_map(attackword, stripWhitespace)
+
+
+set.seed(168)
+wordcloud(words = attackword, scale=c(3,0.2), max.words=300, random.order=FALSE, 
+          rot.per=0.35, use.r.layout=T, colors=brewer.pal(9,"Reds")[5:9])
+```
+
+###The word cloud of cyberattack is also something about "data", "hackers", "business" and "infosec" which indicates the potential risks hidden in business and the needs for information security. 
+
+\newpage
+# Protection Software
+
+###Pretection software can protect the computers and network of individuals or organizations. The two best protection softwares ranked in 2017 are "Bitdefender" and "Kaspersky". I'm eager to see people's attitude toward these two brands.
+
+## Word Cloud of Bitdefender
+
+```{r,message=FALSE,warning=FALSE}
+bitdefender.df <- readRDS("bitdefender.df.rds")
+bitword <- Corpus(VectorSource(str_replace_all(bitdefender.df$text, "@", "")))
+bitword <- tm_map(bitword, removePunctuation)
+bitword <- tm_map(bitword, content_transformer(tolower))
+bitword <- tm_map(bitword, removeWords, stopwords("english"))
+bitword <- tm_map(bitword, removeWords, c("cybercrime","cyber","crime","cybersecurity","security","software","securitysoftware","bitdefender"))
+bitword <- tm_map(bitword, stripWhitespace)
+
+set.seed(168)
+wordcloud(words = bitword, scale=c(3,0.2), max.words=300, random.order=FALSE, 
+          rot.per=0.35, use.r.layout=T, colors=brewer.pal(9,"Greens")[5:9])
+```
+
+###The word cloud of "Bitdefender" shows several main key words like "antivirus", "android", "microsoft" and "million". It may give a clue about bitdefender is an antivirus software having more than million users of android and microsoft. The word cloud nearly have no negative words, which may show that bitdefender has good effects and reputations.
+
+\newpage
+## Word Cloud of Kaspersky
+
+```{r,message=FALSE,warning=FALSE}
+kaspersky.df <- readRDS("kaspersky.df.rds")
+kpword <- Corpus(VectorSource(str_replace_all(kaspersky.df$text, "@", "")))
+kpword <- tm_map(kpword, removePunctuation)
+kpword <- tm_map(kpword, content_transformer(tolower))
+kpword <- tm_map(kpword, removeWords, stopwords("english"))
+kpword <- tm_map(kpword, removeWords, c("cybercrime","cyber","crime","cybersecurity","security","software","securitysoftware","bitdefender","kaspersky"))
+kpword <- tm_map(kpword, stripWhitespace)
+
+pal <- brewer.pal(9,"Greens")
+pal <- pal[-(1:4)]
+set.seed(168)
+wordcloud(words = kpword, scale=c(3,0.2), max.words=300, random.order=FALSE, 
+          rot.per=0.35, use.r.layout=T, colors=brewer.pal(9,"Greens")[5:9])
+```
+
+###The word cloud of "Kaspersky" seems have no such detailed words for characteristics but something like "federal" and "government", which may lead us guess that kaspersky has a better population and reputation among government departments.
+
+\newpage
+## Sentiment Analysis 
+
+###Sentiment analysis is the process of computationally identifying and categorizing opinions expressed in a piece of text, especially in order to determine whether the writer's attitude towards a particular topic, product, etc., is positive, negative, or neutral. By doing sentiment analysis, we can figure out why the brand is having a positive or negative sentiment and how we can change it.
+
+###I broke down each sentence to single word of every tweet and compare the words to the positive/negative words sets to see every tweet's attitude for each brand. The bar plots shows the histogram of score of each brand's sentiment. The higher the score is, more positive is the attitude.
+
+```{r,message=FALSE,warning=FALSE}
+#Sentiment Analysis
+bitdefender.df <- readRDS("bitdefender.df.rds")
+kaspersky.df <- readRDS("kaspersky.df.rds")
+pos.words <- scan("positive-words.txt",what="character",comment.char=";")
+neg.words <- scan("negative-words.txt",what="character",comment.char=";")
+
+pos.words = c(pos.words, 'new','nice' ,'good')
+neg.words = c(neg.words, 'wtf', 'ugly','worse', 'shitty', 'bad', 'no', 'freaking','sucks', 'horrible')
+
+score.sentiment = function(sentences, pos.words, neg.words, .progress='none')
+{
+	require(plyr)
+	require(stringr)
+	
+	# we got a vector of sentences. plyr will handle a list or a vector as an "l" for us
+	# we want a simple array of scores back, so we use "l" + "a" + "ply" = laply:
+	scores = laply(sentences, function(sentence, pos.words, neg.words) {
+		
+		# clean up sentences with R's regex-driven global substitute, gsub():
+		sentence = gsub('[[:punct:]]', '', sentence)
+		sentence = gsub('[[:cntrl:]]', '', sentence)
+		sentence = gsub('\\d+', '', sentence)
+		# and convert to lower case:
+		sentence = tolower(sentence)
+
+		# split into words. str_split is in the stringr package
+		word.list = str_split(sentence, '\\s+')
+		# sometimes a list() is one level of hierarchy too much
+		words = unlist(word.list)
+
+		# compare our words to the dictionaries of positive & negative terms
+		pos.matches = match(words, pos.words)
+		neg.matches = match(words, neg.words)
+	
+		# match() returns the position of the matched term or NA
+		# we just want a TRUE/FALSE:
+		pos.matches = !is.na(pos.matches)
+		neg.matches = !is.na(neg.matches)
+
+		# and conveniently enough, TRUE/FALSE will be treated as 1/0 by sum():
+		score = sum(pos.matches) - sum(neg.matches)
+
+		return(score)
+	}, pos.words, neg.words, .progress=.progress )
+
+	scores.df = data.frame(score=scores, text=sentences)
+	return(scores.df)
+}
+
+bitdefender.df$text <- str_replace_all(bitdefender.df$text, "@", "")
+kaspersky.df$text <- str_replace_all(kaspersky.df$text, "@", "")
+bit_result <- score.sentiment(bitdefender.df$text,pos.words,neg.words)
+saveRDS(bit_result,"bit_result.rds")
+write.csv(bit_result,"bit_result.csv")
+kp_result <- score.sentiment(kaspersky.df$text,pos.words,neg.words)
+saveRDS(kp_result,"kp_result.rds")
+```
+
+```{r,message=FALSE,warning=FALSE}
+#Plot of score
+#bit_result <- read.csv("bit_result.csv")
+#bit_result <- readRDS("bit_result.rds")
+#kp_result <- readRDS("kp_result.rds")
+sent1 <- ggplot(data=bit_result, aes(bit_result$score)) + geom_histogram(fill = "yellow", binwidth = 0.5) + theme_bw() + scale_x_continuous(breaks=seq(-4, 4, 1)) + geom_vline(xintercept = mean(bit_result$score),color = "red",size = 1.3) + labs(title = "Histogram of sentiment score of Bitdefender", y = "Frequency", x= "Score")
+sent1
+```
+
+###From histogram of sentiment score of Bitdefender, we see that the range is from -4 to 4, and a vast majority of sentences have 0 score which means most of them are neutral. The red line indicates the mean of score which is -0.22, so it's knid of lightly negative attitude of people towards Bitdefender.
+
+\newpage
+```{r,message=FALSE,warning=FALSE}
+sent2 <- ggplot(data=kp_result, aes(kp_result$score)) + geom_histogram(fill = "yellow", binwidth = 0.5) + theme_bw() + scale_x_continuous(breaks=seq(-4, 5, 1)) + geom_vline(xintercept = mean(kp_result$score),color = "red",size = 1.3) + labs(title = "Histogram of sentiment score of Kaspersky", y = "Frequency", x= "Score")
+sent2
+```
+
+###From histogram of sentiment score of Kaspersky, we see that the range is from -4 to 5 which means a wider positive range than Bitdefender, and a vast majority of sentences have 0 or 1 score. The red line indicates the mean of score which is 0.27, so it's knid of lightly positive attitude of people towards Kaspersky. Thus, comparing Bitdefender and Kaspersky from tweets, we can conclude that Kaspersky has a relatively positive reputation than Bitdefender.
+

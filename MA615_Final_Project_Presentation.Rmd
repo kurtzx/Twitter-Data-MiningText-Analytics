@@ -1,0 +1,260 @@
+---
+title: "Final Project Presentation"
+author: "Xiang Zhao"
+date: "12/18/2017"
+output: ioslides_presentation
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = FALSE)
+library(tidyverse)
+library(streamR)
+library(stringr)
+library(wordcloud)
+library(tm)
+library(dplyr)
+library(leaflet)
+library(lubridate)
+library(wordcloud)
+library(ggplot2)
+library(plotly)
+library(maps)
+library(maptools)
+```
+# Content
+## Content
+Introduction
+
+Cybersecutiry: Word Cloud, Timeline & Map
+
+Cyberthreats: Word Cloud
+
+Protection Software: Word Cloud & Sentiment Analysis
+
+# Introduction
+## Introduction
+2017 Cyberthreats Defense Report have done a survey and data analysis on successful cyberattacks a company or an organization experienced in 15 countries. 
+
+It shows that 80.6% respondents in America have compromised by at least one successful cyberattack in the past 12 months. The beast situation happened in Brazil and the worst situation happpened in China, 64.7% and 95.9%.
+
+## Introduction
+It's not hard to see the severity of cyberattack and importance of cybersecurity. 
+
+Thus, I choose cybersecurity and cyberattack(cybercrime) as my topics to see the reactions and comments people have on social media Twitter.
+
+I will use text analysis and mapping to see the where and what kind of reactions and comments peopel have gloabally. And also I select first two best protection softwares against cyberattacks, using sentiment analysis to see people's attitude towards these two softwares.
+
+# Cybersecurity
+
+## Cybersecurity
+Word Cloud
+```{r,message=FALSE,warning=FALSE}
+cybersecurity.df <- readRDS("cybersecurity.df.rds")
+cyberword <- Corpus(VectorSource(str_replace_all(cybersecurity.df$text, "@", "")))
+cyberword <- tm_map(cyberword, removePunctuation)
+cyberword <- tm_map(cyberword, content_transformer(tolower))
+cyberword <- tm_map(cyberword, removeWords, stopwords("english"))
+cyberword <- tm_map(cyberword, removeWords, c("cybersecurity","cyber","security","levelnet","amp","visit","part"))
+cyberword <- tm_map(cyberword, stripWhitespace)
+
+pal <- brewer.pal(9,"Blues")
+pal <- pal[-(1:4)]
+set.seed(123)
+wordcloud(words = cyberword, scale=c(2.5,0.2), max.words=300, random.order=FALSE, 
+          rot.per=0.35, use.r.layout=FALSE, colors=brewer.pal(9,"Blues")[5:9])
+```
+
+Key words: "entrepreneurial", "timmaliyil" and "blockchain"
+
+## Cybersecurity
+Timeline
+```{r,message=FALSE,warning=FALSE}
+#Timeline
+cybersecurity.df$favoriteCount <- as.numeric(cybersecurity.df$favoriteCount)
+t1 <- ggplot(cybersecurity.df, aes(x = created))
+t1 <- t1 + geom_line(aes(y = favoriteCount),color = "navy")
+t1 <- t1 + labs(x="Time", y="Number of Favorites")
+ggplotly(t1)
+```
+
+## Cybersecurity
+Map
+```{r,message=FALSE,warning=FALSE}
+#Mapping
+cybersecurity.geo <- readRDS("cybersecurity.geo.rds")
+cybersecurity.geo$longitude <- as.numeric(cybersecurity.geo$longitude)
+cybersecurity.geo$latitude <- as.numeric(cybersecurity.geo$latitude)
+map <- NULL
+mapworld <- borders("world", colour="gray45", fill="light green") # create a layer of borders
+map <- ggplot() +   mapworld
+map <- map+ geom_point(aes(longitude,latitude), data = cybersecurity.geo, color="dark red", size=2.5) 
+map <- map + theme_bw()
+ggplotly(map)
+```
+
+The USA and India.
+
+## Cybercrime
+Word Cloud
+```{r,message=FALSE,warning=FALSE}
+cybercrime.df <- readRDS("cybercrime.df.rds")
+crimeword <- Corpus(VectorSource(str_replace_all(cybercrime.df$text, "@", "")))
+crimeword <- tm_map(crimeword, removePunctuation)
+crimeword <- tm_map(crimeword, content_transformer(tolower))
+crimeword <- tm_map(crimeword, removeWords, stopwords("english"))
+crimeword <- tm_map(crimeword, removeWords, c("cybercrime","cyber","crime","cybersecurity","security","amp"))
+crimeword <- tm_map(crimeword, stripWhitespace)
+
+pal <- brewer.pal(9,"Reds")
+pal <- pal[-(1:4)]
+set.seed(168)
+wordcloud(words = crimeword, scale=c(2.5,0.2), max.words=300, random.order=FALSE, 
+          rot.per=0.35, use.r.layout=T, colors=brewer.pal(9,"Reds")[5:9])
+```
+
+Key words: "infosec", "bitcoin", "banking","hacking","frauds","big data" and "machine learning"
+
+## Cyberattack
+Word Cloud
+```{r,message=FALSE,warning=FALSE}
+cyberattack.df <- readRDS("cyberattack.df.rds")
+attackword <- Corpus(VectorSource(str_replace_all(cyberattack.df$text, "@", "")))
+attackword <- tm_map(attackword, removePunctuation)
+attackword <- tm_map(attackword, content_transformer(tolower))
+attackword <- tm_map(attackword, removeWords, stopwords("english"))
+attackword <- tm_map(attackword, removeWords, c("cyber","cyberattack","attack","cybersecurity"))
+attackword <- tm_map(attackword, stripWhitespace)
+
+
+set.seed(168)
+wordcloud(words = attackword, scale=c(3,0.2), max.words=300, random.order=FALSE, 
+          rot.per=0.35, use.r.layout=T, colors=brewer.pal(9,"Reds")[5:9])
+```
+
+Key words:  "data", "hackers", "business" and "infosec" 
+
+## Bitdefender
+Word Cloud
+```{r,message=FALSE,warning=FALSE}
+bitdefender.df <- readRDS("bitdefender.df.rds")
+bitword <- Corpus(VectorSource(str_replace_all(bitdefender.df$text, "@", "")))
+bitword <- tm_map(bitword, removePunctuation)
+bitword <- tm_map(bitword, content_transformer(tolower))
+bitword <- tm_map(bitword, removeWords, stopwords("english"))
+bitword <- tm_map(bitword, removeWords, c("cybercrime","cyber","crime","cybersecurity","security","software","securitysoftware","bitdefender"))
+bitword <- tm_map(bitword, stripWhitespace)
+
+set.seed(168)
+wordcloud(words = bitword, scale=c(3,0.2), max.words=300, random.order=FALSE, 
+          rot.per=0.35, use.r.layout=T, colors=brewer.pal(9,"Greens")[5:9])
+```
+
+Key words: "antivirus", "android", "microsoft" and "million"
+
+## Kaspersky
+Word Cloud
+```{r,message=FALSE,warning=FALSE}
+kaspersky.df <- readRDS("kaspersky.df.rds")
+kpword <- Corpus(VectorSource(str_replace_all(kaspersky.df$text, "@", "")))
+kpword <- tm_map(kpword, removePunctuation)
+kpword <- tm_map(kpword, content_transformer(tolower))
+kpword <- tm_map(kpword, removeWords, stopwords("english"))
+kpword <- tm_map(kpword, removeWords, c("cybercrime","cyber","crime","cybersecurity","security","software","securitysoftware","bitdefender","kaspersky"))
+kpword <- tm_map(kpword, stripWhitespace)
+
+pal <- brewer.pal(9,"Greens")
+pal <- pal[-(1:4)]
+set.seed(168)
+wordcloud(words = kpword, scale=c(3,0.2), max.words=300, random.order=FALSE, 
+          rot.per=0.35, use.r.layout=T, colors=brewer.pal(9,"Greens")[5:9])
+```
+
+Key words: "federal" and "government"
+
+```{r,message=FALSE,warning=FALSE}
+#Sentiment Analysis
+bitdefender.df <- readRDS("bitdefender.df.rds")
+kaspersky.df <- readRDS("kaspersky.df.rds")
+pos.words <- scan("positive-words.txt",what="character",comment.char=";")
+neg.words <- scan("negative-words.txt",what="character",comment.char=";")
+
+pos.words = c(pos.words, 'new','nice' ,'good')
+neg.words = c(neg.words, 'wtf', 'ugly','worse', 'shitty', 'bad', 'no', 'freaking','sucks', 'horrible')
+
+score.sentiment = function(sentences, pos.words, neg.words, .progress='none')
+{
+	require(plyr)
+	require(stringr)
+	
+	# we got a vector of sentences. plyr will handle a list or a vector as an "l" for us
+	# we want a simple array of scores back, so we use "l" + "a" + "ply" = laply:
+	scores = laply(sentences, function(sentence, pos.words, neg.words) {
+		
+		# clean up sentences with R's regex-driven global substitute, gsub():
+		sentence = gsub('[[:punct:]]', '', sentence)
+		sentence = gsub('[[:cntrl:]]', '', sentence)
+		sentence = gsub('\\d+', '', sentence)
+		# and convert to lower case:
+		sentence = tolower(sentence)
+
+		# split into words. str_split is in the stringr package
+		word.list = str_split(sentence, '\\s+')
+		# sometimes a list() is one level of hierarchy too much
+		words = unlist(word.list)
+
+		# compare our words to the dictionaries of positive & negative terms
+		pos.matches = match(words, pos.words)
+		neg.matches = match(words, neg.words)
+	
+		# match() returns the position of the matched term or NA
+		# we just want a TRUE/FALSE:
+		pos.matches = !is.na(pos.matches)
+		neg.matches = !is.na(neg.matches)
+
+		# and conveniently enough, TRUE/FALSE will be treated as 1/0 by sum():
+		score = sum(pos.matches) - sum(neg.matches)
+
+		return(score)
+	}, pos.words, neg.words, .progress=.progress )
+
+	scores.df = data.frame(score=scores, text=sentences)
+	return(scores.df)
+}
+
+bitdefender.df$text <- str_replace_all(bitdefender.df$text, "@", "")
+kaspersky.df$text <- str_replace_all(kaspersky.df$text, "@", "")
+bit_result <- score.sentiment(bitdefender.df$text,pos.words,neg.words)
+saveRDS(bit_result,"bit_result.rds")
+write.csv(bit_result,"bit_result.csv")
+kp_result <- score.sentiment(kaspersky.df$text,pos.words,neg.words)
+saveRDS(kp_result,"kp_result.rds")
+```
+
+## Bitdefender & Kaspersky
+Sentiment Analysis
+```{r,message=FALSE,warning=FALSE}
+#Plot of score
+#bit_result <- read.csv("bit_result.csv")
+#bit_result <- readRDS("bit_result.rds")
+#kp_result <- readRDS("kp_result.rds")
+sent1 <- ggplot(data=bit_result, aes(bit_result$score)) + geom_histogram(fill = "yellow", binwidth = 0.5) + theme_bw() + scale_x_continuous(breaks=seq(-4, 4, 1)) + geom_vline(xintercept = mean(bit_result$score),color = "red",size = 1.3) + labs(title = "Histogram of sentiment score of Bitdefender", y = "Frequency", x= "Score")
+ggplotly(sent1)
+```
+
+## Bitdefender & Kaspersky
+Sentiment Analysis
+```{r,message=FALSE,warning=FALSE}
+sent2 <- ggplot(data=kp_result, aes(kp_result$score)) + geom_histogram(fill = "yellow", binwidth = 0.5) + theme_bw() + scale_x_continuous(breaks=seq(-4, 5, 1)) + geom_vline(xintercept = mean(kp_result$score),color = "red",size = 1.3) + labs(title = "Histogram of sentiment score of Kaspersky", y = "Frequency", x= "Score")
+ggplotly(sent2)
+```
+
+## Bitdefender & Kaspersky
+Sentiment Analysis
+
+From histogram of sentiment score of Bitdefender, we see that the range is from -4 to 4, and a vast majority of sentences have 0 score which means most of them are neutral. The red line indicates the mean of score which is -0.22, so it's knid of lightly negative attitude of people towards Bitdefender.
+
+From histogram of sentiment score of Kaspersky, we see that the range is from -4 to 5 which means a wider positive range than Bitdefender, and a vast majority of sentences have 0 or 1 score. The red line indicates the mean of score which is 0.27, so it's knid of lightly positive attitude of people towards Kaspersky. Thus, comparing Bitdefender and Kaspersky from tweets, we can conclude that Kaspersky has a relatively positive reputation than Bitdefender.
+
+# Thanks!
+
+

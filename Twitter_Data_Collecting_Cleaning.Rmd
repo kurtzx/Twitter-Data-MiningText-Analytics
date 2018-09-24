@@ -1,0 +1,111 @@
+---
+title: "MA615 Final Project"
+author: "Xiang Zhao"
+date: "12/4/2017"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F)
+library(devtools)
+library(twitteR)
+library(tidyverse)
+library(streamR)
+library(stringr)
+library(tm)
+library(dplyr)
+```
+
+#load("my_oauth.dta")
+#get followers
+
+```{r}
+api_key <- 	"FkIzQGbGZYp9SEuTNTgWsYcbd"
+api_secret <- "VBumhujY3vWXt750oVZeoZmfigt0m8gYZbM5OuvzGQfoYq0E3L"
+access_token <- "895520349504360448-OrrCzTUIEU02ohjvMyJ8zkPIxDaqQd4"
+access_token_secret <- "VfipcLFKAEZo4e0qF6YcxRbfphx9l4QQum7zcLwbDeOLZ"
+
+setup_twitter_oauth(api_key, api_secret, access_token, access_token_secret)
+```
+
+```{r}
+cybersecurity <- searchTwitter('cybersecurity',since='2015-01-01', until='2017-12-14', lang = "en",n = 10000)
+
+cybersecurity.df <- twListToDF(cybersecurity)
+```
+
+```{r}
+cybersecurity.df <- cybersecurity.df %>% 
+  separate(col = text, into = c("text","ip"), sep = 'https', remove = T)
+cybersecurity.df$text <- iconv(cybersecurity.df$text,from = "latin1", to = "ASCII", sub = "")
+
+saveRDS(cybersecurity.df,"cybersecurity.df.rds")
+
+cybersecurity.geo <-dplyr::filter(cybersecurity.df,!is.na(cybersecurity.df$longitude) & !is.na(cybersecurity.df$latitude))
+saveRDS(cybersecurity.geo,"cybersecurity.geo.rds")
+```
+
+```{r}
+cybercrime <- searchTwitter('cybercrime',since='2015-01-01', until='2017-12-14', lang = "en",n = 10000)
+
+cybercrime.df <- twListToDF(cybercrime)
+```
+
+```{r}
+cybercrime.df <- cybercrime.df %>% 
+  separate(col = text, into = c("text","ip"), sep = 'https', remove = T)
+cybercrime.df$text <- iconv(cybercrime.df$text,from = "latin1", to = "ASCII", sub = "")
+
+saveRDS(cybercrime.df,"cybercrime.df.rds")
+
+cybercrime.geo <-dplyr::filter(cybercrime.df,!is.na(cybercrime.df$longitude) & !is.na(cybercrime.df$latitude))
+saveRDS(cybercrime.geo,"cybercrime.geo.rds")
+```
+
+```{r}
+bitdefender <- searchTwitter('bitdefender',since='2015-01-01', until='2017-12-14', lang = "en", n = 10000)
+
+bitdefender.df <- twListToDF(bitdefender)
+```
+
+```{r}
+bitdefender.df <- bitdefender.df %>% 
+  separate(col = text, into = c("text","ip"), sep = 'https', remove = T)
+bitdefender.df$text <- iconv(bitdefender.df$text,from = "latin1", to = "ASCII", sub = "")
+
+saveRDS(bitdefender.df,"bitdefender.df.rds")
+
+bitdefender.geo <-dplyr::filter(bitdefender.df,!is.na(bitdefender.df$longitude) & !is.na(bitdefender.df$latitude))
+saveRDS(bitdefender.geo,"bitdefender.geo.rds")
+```
+
+```{r}
+kaspersky  <- searchTwitter('kaspersky ',since='2015-01-01', until='2017-12-14', lang = "en", n = 10000)
+
+kaspersky.df <- twListToDF(kaspersky )
+```
+
+```{r}
+kaspersky.df <- kaspersky.df %>% 
+  separate(col = text, into = c("text","ip"), sep = 'https', remove = T)
+kaspersky.df$text <- iconv(kaspersky.df$text,from = "latin1", to = "ASCII", sub = "")
+
+saveRDS(kaspersky.df,"kaspersky.df.rds")
+
+kaspersky.geo <-dplyr::filter(kaspersky.df,!is.na(kaspersky.df$longitude) & !is.na(kaspersky.df$latitude))
+saveRDS(kaspersky.geo,"kaspersky.geo.rds")
+```
+
+```{r}
+cyberattack  <- searchTwitter('cyberattack',since='2015-01-01', until='2017-12-14', lang = "en", n = 10000)
+
+cyberattack.df <- twListToDF(cyberattack)
+```
+
+```{r}
+cyberattack.df <- cyberattack.df %>% 
+  separate(col = text, into = c("text","ip"), sep = 'https', remove = T)
+cyberattack.df$text <- iconv(cyberattack.df$text,from = "latin1", to = "ASCII", sub = "")
+
+saveRDS(cyberattack.df,"cyberattack.df.rds")
+```
